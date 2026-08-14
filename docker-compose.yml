@@ -1,0 +1,17 @@
+services:
+  github-runner:
+    image: ghcr.io/actions/actions-runner:2.336.0
+    container_name: github-runner
+    restart: unless-stopped
+    environment:
+      RUNNER_SCOPE: repo
+      REPO_URL: ${REPO_URL}
+      RUNNER_TOKEN: ${RUNNER_TOKEN}
+      RUNNER_NAME: docker-runner
+      LABELS: docker,self-hosted
+
+    volumes:
+      - runner-data:/home/runner/_work
+
+volumes:
+  runner-data:
