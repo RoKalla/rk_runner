@@ -1,6 +1,6 @@
 services:
   github-runner:
-    image: ghcr.io/actions/actions-runner:2.336.0
+    build: .
     container_name: github-runner
     restart: unless-stopped
     environment:
