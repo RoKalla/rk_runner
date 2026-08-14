@@ -12,6 +12,8 @@ services:
 
     volumes:
       - runner-data:/home/runner/_work
+      - pub-cache-data:/home/runner/.pub-cache
 
 volumes:
   runner-data:
+  pub-cache-data:

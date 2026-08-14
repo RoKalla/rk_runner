@@ -166,12 +166,16 @@ services:
 
     volumes:
       - runner-data:/home/runner/_work
+      - pub-cache-data:/home/runner/.pub-cache
 
 volumes:
   runner-data:
+  pub-cache-data:
 ```
 
 The values are loaded from `.env` by Docker Compose.
+
+Both `_work` (the job workspace, including any tool caches actions install there, e.g. a Flutter SDK via `subosito/flutter-action`) and `.pub-cache` (Dart/Flutter's package cache) are persisted as named volumes across container restarts and rebuilds. This matters for workflow authors: because this runner keeps its disk between jobs (unlike GitHub-hosted runners, which start from a clean disk every time), GitHub's own `actions/cache` step is usually redundant here and just adds a multi-second-to-multi-minute round trip re-downloading something already sitting on local disk. Prefer relying on this runner's persistent disk over `actions/cache` where you can (e.g. `subosito/flutter-action`'s `cache: false` — it still skips reinstalling if it finds a valid SDK already at the target path).
 
 ---
 
