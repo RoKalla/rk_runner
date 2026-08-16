@@ -167,15 +167,22 @@ services:
     volumes:
       - runner-data:/home/runner/_work
       - pub-cache-data:/home/runner/.pub-cache
+      - android-sdk-data:/home/runner/android-sdk
+      - gradle-cache-data:/home/runner/.gradle
+      - /var/run/docker.sock:/var/run/docker.sock
 
 volumes:
   runner-data:
   pub-cache-data:
+  android-sdk-data:
+  gradle-cache-data:
 ```
 
 The values are loaded from `.env` by Docker Compose.
 
-Both `_work` (the job workspace, including any tool caches actions install there, e.g. a Flutter SDK via `subosito/flutter-action`) and `.pub-cache` (Dart/Flutter's package cache) are persisted as named volumes across container restarts and rebuilds. This matters for workflow authors: because this runner keeps its disk between jobs (unlike GitHub-hosted runners, which start from a clean disk every time), GitHub's own `actions/cache` step is usually redundant here and just adds a multi-second-to-multi-minute round trip re-downloading something already sitting on local disk. Prefer relying on this runner's persistent disk over `actions/cache` where you can (e.g. `subosito/flutter-action`'s `cache: false` — it still skips reinstalling if it finds a valid SDK already at the target path).
+`_work` (the job workspace, including any tool caches actions install there, e.g. a Flutter SDK via `subosito/flutter-action`), `.pub-cache` (Dart/Flutter's package cache), `android-sdk` (the Android SDK — cmdline-tools/platform-tools are baked into the image, but platforms/build-tools/NDK the Android Gradle Plugin downloads on first use land here), and `.gradle` (Gradle's dependency cache) are all persisted as named volumes across container restarts and rebuilds. This matters for workflow authors: because this runner keeps its disk between jobs (unlike GitHub-hosted runners, which start from a clean disk every time), GitHub's own `actions/cache` step is usually redundant here and just adds a multi-second-to-multi-minute round trip re-downloading something already sitting on local disk. Prefer relying on this runner's persistent disk over `actions/cache` where you can (e.g. `subosito/flutter-action`'s `cache: false` — it still skips reinstalling if it finds a valid SDK already at the target path).
+
+`/var/run/docker.sock` is a bind mount of the *host's* real Docker socket (not a named volume), letting jobs run `docker build`/etc. against the host's own daemon — there's no nested `dockerd` inside this container. This is root-equivalent access to the host from any job that runs on this runner. It's a reasonable tradeoff for a runner serving a single trusted repo with no external PR contributors, but think twice before copying this into a shared or untrusted runner setup — see the Security section below.
 
 ---
 

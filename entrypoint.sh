@@ -3,12 +3,15 @@ set -e
 
 cd /home/runner
 
-# _work and .pub-cache are mounted volumes (see docker-compose.yml) and
-# Docker doesn't guarantee they're owned by the runner user on every start
-# (e.g. a fresh named volume can come up root-owned) — without this, actions
-# that write into them (like subosito/flutter-action's SDK/pub caches) fail
-# with "Permission denied".
-for dir in _work .pub-cache; do
+# _work, .pub-cache, android-sdk, and .gradle are mounted named volumes (see
+# docker-compose.yml) and Docker doesn't guarantee they're owned by the
+# runner user on every start (e.g. a fresh named volume can come up
+# root-owned) — without this, actions/builds that write into them (Flutter's
+# SDK/pub caches, the Android SDK, Gradle's dependency cache) fail with
+# "Permission denied". /var/run/docker.sock is deliberately NOT in this list
+# — it's a bind mount of the host's real socket, and chown-ing it here would
+# chown the host's file, not a container-local copy.
+for dir in _work .pub-cache android-sdk .gradle; do
   sudo mkdir -p "$dir"
   sudo chown -R "$(id -u):$(id -g)" "$dir"
 done

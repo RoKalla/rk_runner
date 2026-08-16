@@ -13,7 +13,17 @@ services:
     volumes:
       - runner-data:/home/runner/_work
       - pub-cache-data:/home/runner/.pub-cache
+      - android-sdk-data:/home/runner/android-sdk
+      - gradle-cache-data:/home/runner/.gradle
+      # Lets jobs run `docker build`/etc. against the host's own Docker
+      # daemon (no nested dockerd in this container). This is root-equivalent
+      # access to the host from any job that runs on this runner — acceptable
+      # here only because this runner serves a solo repo with no external PR
+      # contributors; don't copy this into a shared/untrusted runner setup.
+      - /var/run/docker.sock:/var/run/docker.sock
 
 volumes:
   runner-data:
   pub-cache-data:
+  android-sdk-data:
+  gradle-cache-data:
